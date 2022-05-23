@@ -1,3 +1,4 @@
+
 from sys import exit
 import pygame
 from random import randint, choice
@@ -14,15 +15,32 @@ class Player(pygame.sprite.Sprite):
         self.image = self.player_walk[self.player_index]
         self.rect = self.image.get_rect(midbottom = (80,300))
         self.gravity = 0
+        self.cool_down = 0
 
         self.jump_sound = pygame.mixer.Sound('audio/jump.mp3')
         self.jump_sound.set_volume(0.5)
 
     def player_input(self):
+        
+    
+        self.cool_down = self.cool_down +  1
+        print(self.cool_down)
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE] and self.rect.bottom >= 300 :
+        if keys[pygame.K_SPACE] and self.rect.bottom >= 300:
+         
             self.gravity = -20
             self.jump_sound.play()
+            print('single')
+        
+        if keys[pygame.K_UP] and self.cool_down > 300:
+            print('double')
+            self.cool_down = 0
+            self.gravity = -20
+        
+        
+        
+        
+            
 
     def apply_gravity(self):
         self.gravity += 1
@@ -37,12 +55,16 @@ class Player(pygame.sprite.Sprite):
             if self.player_index >= len(self.player_walk): 
                 self.player_index = 0
             self.image = self.player_walk[int(self.player_index)]
+        if self.cool_down > 300:
+            pygame.draw.circle(screen,'White',(200,100), 30)
+        else: pygame.draw.circle(screen,'Black',(200,100), 30)
         
 
     def update(self):
         self.player_input()
         self.apply_gravity()
         self.animation_state()
+       
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, type) :
@@ -79,17 +101,6 @@ class Obstacle(pygame.sprite.Sprite):
         self.animation_state()
         self.rect.x -= 6
 
-
-def player_animation():
-    global player_surf, player_index, player_rect
-    if player_rect.bottom < 300:
-        player_surf = player_jump
-    else:
-        player_index += 0.1
-        if player_index >= len(player_walk): player_index = 0
-        player_surf = player_walk[int(player_index)]
-    screen.blit(player_surf,player_rect)
-
 def display_score():
     current_time = int(pygame.time.get_ticks()/1000) - start_time
     score_surf = font.render(f'Score: {current_time}', False, 'Brown')
@@ -111,14 +122,16 @@ width = 800
 height = 400
 screen = pygame.display.set_mode((width,height))
 pygame.display.set_caption("RUNNER")
+
+#clock
 clock = pygame.time.Clock()
 font = pygame.font.Font('font/Pixeltype.ttf',50)
 game_active = False
 start_time = 0
 score = 0
 bg = pygame.mixer.Sound('audio/music.wav')
-bg.set_volume(0.1)
-bg.play()
+bg.set_volume(1)
+bg.play(loops = -1)
 
 #groups
 player = pygame.sprite.GroupSingle()
@@ -164,6 +177,9 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit() 
             exit()
+
+        if event.type == pygame.KEYDOWN:
+            print('keydown')
 
         if game_active:
             if event.type == obstacle_timer :
